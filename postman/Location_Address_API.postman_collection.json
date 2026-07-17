@@ -1,0 +1,394 @@
+{
+  "info": {
+    "name": "Location & Address Management API",
+    "description": "Complete API collection for the Location & Address Management module. Mimics Blinkit / Zepto / Swiggy Instamart flow.\n\n**Setup:**\n1. Set `baseUrl` variable to `http://localhost:5000`\n2. Register a user, then login to get a token\n3. The token is auto-saved to the `token` collection variable\n4. All address endpoints use `{{token}}` automatically",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000", "type": "string" },
+    { "key": "token",   "value": "", "type": "string" },
+    { "key": "addressId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "  console.log('Token saved:', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sai Ganesh\",\n  \"email\": \"sai@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Registration successful.\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"_id\": \"665abc123def456789012345\",\n      \"name\": \"Sai Ganesh\",\n      \"email\": \"sai@example.com\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "  console.log('Token saved:', json.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sai@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful.\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"_id\": \"665abc123def456789012345\",\n      \"name\": \"Sai Ganesh\",\n      \"email\": \"sai@example.com\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Address",
+      "item": [
+        {
+          "name": "API 1 – Save Current Location",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.data && json.data._id) {",
+                  "    pm.collectionVariables.set('addressId', json.data._id);",
+                  "    console.log('addressId saved:', json.data._id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/api/address/current-location",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 17.385044,\n  \"longitude\": 78.486671\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created – New Address",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Current location saved successfully.\",\n  \"data\": {\n    \"_id\": \"665abc123def456789012345\",\n    \"fullAddress\": \"8-2-293/82/A, Road No. 36, Jubilee Hills, Hyderabad, Telangana 500033, India\",\n    \"city\": \"Hyderabad\",\n    \"state\": \"Telangana\",\n    \"country\": \"India\",\n    \"pincode\": \"500033\",\n    \"latitude\": 17.385044,\n    \"longitude\": 78.486671,\n    \"isDefault\": true\n  }\n}"
+            },
+            {
+              "name": "200 OK – Nearby Address Exists",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Address already exists nearby. Returning existing address.\",\n  \"data\": {\n    \"_id\": \"665abc123def456789012345\",\n    \"fullAddress\": \"8-2-293/82/A, Road No. 36, Jubilee Hills, Hyderabad, Telangana 500033, India\",\n    \"city\": \"Hyderabad\",\n    \"state\": \"Telangana\",\n    \"country\": \"India\",\n    \"pincode\": \"500033\",\n    \"latitude\": 17.385044,\n    \"longitude\": 78.486671,\n    \"isDefault\": true\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "API 2 – Get Default Address",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/address/default"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Default address fetched successfully.\",\n  \"data\": {\n    \"_id\": \"665abc123def456789012345\",\n    \"user\": \"665abc111def456789012345\",\n    \"fullAddress\": \"8-2-293/82/A, Road No. 36, Jubilee Hills, Hyderabad, Telangana 500033, India\",\n    \"houseNo\": \"\",\n    \"landmark\": \"\",\n    \"city\": \"Hyderabad\",\n    \"state\": \"Telangana\",\n    \"country\": \"India\",\n    \"pincode\": \"500033\",\n    \"latitude\": 17.385044,\n    \"longitude\": 78.486671,\n    \"label\": \"Home\",\n    \"isDefault\": true,\n    \"createdAt\": \"2024-06-15T10:30:00.000Z\",\n    \"updatedAt\": \"2024-06-15T10:30:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "API 3 – Get All Addresses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/address?page=1&limit=10",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "city", "value": "", "disabled": true },
+                { "key": "pincode", "value": "", "disabled": true }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Addresses fetched successfully.\",\n  \"data\": [\n    {\n      \"_id\": \"665abc123def456789012345\",\n      \"fullAddress\": \"8-2-293/82/A, Road No. 36, Jubilee Hills, Hyderabad, Telangana 500033, India\",\n      \"city\": \"Hyderabad\",\n      \"state\": \"Telangana\",\n      \"country\": \"India\",\n      \"pincode\": \"500033\",\n      \"latitude\": 17.385044,\n      \"longitude\": 78.486671,\n      \"label\": \"Home\",\n      \"isDefault\": true\n    }\n  ],\n  \"meta\": {\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 10,\n    \"totalPages\": 1,\n    \"hasNextPage\": false,\n    \"hasPrevPage\": false\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "API 3 – Search by City",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/address?city=Hyderabad",
+              "query": [{ "key": "city", "value": "Hyderabad" }]
+            }
+          }
+        },
+        {
+          "name": "API 3 – Search by Pincode",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/address?pincode=500033",
+              "query": [{ "key": "pincode", "value": "500033" }]
+            }
+          }
+        },
+        {
+          "name": "API 4 – Create Address Manually",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('addressId', json.data._id);",
+                  "  console.log('addressId saved:', json.data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/api/address",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"houseNo\": \"Flat 301, Block A\",\n  \"landmark\": \"Near Metro Station\",\n  \"city\": \"Hyderabad\",\n  \"state\": \"Telangana\",\n  \"country\": \"India\",\n  \"pincode\": \"500081\",\n  \"latitude\": 17.4401,\n  \"longitude\": 78.3489,\n  \"label\": \"Office\",\n  \"isDefault\": false\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Address created successfully.\",\n  \"data\": {\n    \"_id\": \"665def456abc789012345678\",\n    \"user\": \"665abc111def456789012345\",\n    \"houseNo\": \"Flat 301, Block A\",\n    \"landmark\": \"Near Metro Station\",\n    \"city\": \"Hyderabad\",\n    \"state\": \"Telangana\",\n    \"country\": \"India\",\n    \"pincode\": \"500081\",\n    \"latitude\": 17.4401,\n    \"longitude\": 78.3489,\n    \"label\": \"Office\",\n    \"isDefault\": false,\n    \"createdAt\": \"2024-06-15T11:00:00.000Z\",\n    \"updatedAt\": \"2024-06-15T11:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "API 5 – Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/api/address/{{addressId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"houseNo\": \"Flat 302, Block B\",\n  \"landmark\": \"Near HICC\",\n  \"label\": \"Home\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Address updated successfully.\",\n  \"data\": {\n    \"_id\": \"665def456abc789012345678\",\n    \"houseNo\": \"Flat 302, Block B\",\n    \"landmark\": \"Near HICC\",\n    \"label\": \"Home\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "API 6 – Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/address/{{addressId}}"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Address deleted successfully.\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "API 7 – Set Default Address",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/address/default/{{addressId}}"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Default address updated successfully.\",\n  \"data\": {\n    \"_id\": \"665def456abc789012345678\",\n    \"isDefault\": true\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Error Cases",
+      "item": [
+        {
+          "name": "400 – Missing Coordinates",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/api/address/current-location",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": [
+            {
+              "name": "400 Validation Error",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed.\",\n  \"errors\": [\n    { \"field\": \"latitude\", \"message\": \"Latitude is required.\" },\n    { \"field\": \"longitude\", \"message\": \"Longitude is required.\" }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "401 – No Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/address"
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Access denied. No token provided. Please log in.\",\n  \"code\": \"NO_TOKEN\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "404 – Address Not Found",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/address/default"
+          },
+          "response": [
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"No default address found.\",\n  \"code\": \"DEFAULT_ADDRESS_NOT_FOUND\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "400 – Invalid Latitude",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/api/address/current-location",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 200,\n  \"longitude\": 78.486671\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "400 Invalid Latitude",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed.\",\n  \"errors\": [\n    { \"field\": \"latitude\", \"message\": \"Latitude must be a number between -90 and 90.\" }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    }
+  ]
+}
